@@ -3,26 +3,28 @@ import base64
 import google.generativeai as genai
 from google.cloud import texttospeech
 from google.cloud import speech
-from google.api_core.client_options import ClientOptions # <-- NEW IMPORT added here
+from google.api_core.client_options import ClientOptions
 
 class AdminAIController:
     def __init__(self):
-        # 1. Initialize Gemini
+        # 1. Initialize Gemini API Key
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY is missing from environment variables.")
         genai.configure(api_key=api_key)
         
-        # Pulls the model name from your .env file
-        model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        # 2. Dynamically load the model strictly from .env (No hardcoding)
+        model_name = os.getenv("GEMINI_MODEL")
+        if not model_name:
+            raise ValueError("GEMINI_MODEL is missing from environment variables.")
+        
         self.vision_model = genai.GenerativeModel(model_name)
 
-        # 2. Initialize GCP Clients using the API Key string
+        # 3. Initialize GCP Clients using the API Key string
         gcp_key = os.getenv("GOOGLE_TTS_API_KEY")
         if not gcp_key:
              raise ValueError("GOOGLE_TTS_API_KEY is missing from environment variables.")
              
-        # This tells Google Cloud to use your string API key instead of looking for a JSON file
         client_options = ClientOptions(api_key=gcp_key)
         
         self.tts_client = texttospeech.TextToSpeechClient(client_options=client_options)
@@ -70,8 +72,6 @@ class AdminAIController:
         translated_text = self.translate_text(original_text, target_lang)
         
         # Step 3: Text to Voice
-        # Mapping standard language names to GCP language codes would go here. 
-        # For this demo, we assume target_lang is passed as a valid GCP code (e.g., 'es-ES')
         translated_audio_base64 = self.generate_speech(translated_text, target_lang)
         
         return {

@@ -7,7 +7,11 @@ load_dotenv()
 # 2. NOW import FastAPI and your routes, so they can use the keys.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes.admin_route import router as admin_router
+from routes.student_routes import router as student_router
+from routes.admin_routes import router as admin_router
+from routes.teacher_routes import router as teacher_router
+from routes.hm_routes import router as hm_router
+from routes.parent_routes import router as parent_router
 
 app = FastAPI(
     title="Demo School AI Service",
@@ -25,7 +29,15 @@ app.add_middleware(
 )
 
 # Register Admin Routes
+app.include_router(student_router, prefix="/api/v1/student", tags=["Student Dashboard"])
+
 app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin Dashboard"])
+
+app.include_router(teacher_router, prefix="/api/v1/teacher", tags=["Teacher Dashboard"])
+
+app.include_router(hm_router, prefix="/api/v1/hm", tags=["HM Dashboard"])
+
+app.include_router(parent_router, prefix="/api/v1/parent", tags=["Parent Dashboard"])
 
 if __name__ == "__main__":
     import uvicorn

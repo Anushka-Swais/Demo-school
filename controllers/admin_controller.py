@@ -1,24 +1,24 @@
 import os
 import base64
-import google.generativeai as genai
+from google import genai
 from google.cloud import texttospeech
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 
 class AdminAIController:
     def __init__(self):
-        # 1. Initialize Gemini API Key
+        # 1. Initialize Gemini API Client (New SDK Standard)
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY is missing from environment variables.")
-        genai.configure(api_key=api_key)
+        
+        # Create the new Client object
+        self.client = genai.Client(api_key=api_key)
         
         # 2. Dynamically load the model strictly from .env
-        model_name = os.getenv("GEMINI_MODEL")
-        if not model_name:
+        self.model_name = os.getenv("GEMINI_MODEL")
+        if not self.model_name:
             raise ValueError("GEMINI_MODEL is missing from environment variables.")
-        
-        self.vision_model = genai.GenerativeModel(model_name)
 
         # 3. Initialize GCP Clients using the API Key string
         gcp_key = os.getenv("GOOGLE_TTS_API_KEY")
@@ -30,7 +30,7 @@ class AdminAIController:
         self.tts_client = texttospeech.TextToSpeechClient(client_options=client_options)
         self.stt_client = speech.SpeechClient(client_options=client_options)
 
-        # 4. NEW: Regional Language Mapper for Google Cloud Voice APIs
+        # 4. Regional Language Mapper for Google Cloud Voice APIs
         self.language_map = {
             "english": "en-IN",
             "hindi": "hi-IN",
@@ -53,7 +53,12 @@ class AdminAIController:
     def translate_text(self, text: str, target_language: str) -> str:
         # Gemini is smart enough to just take the word "Hindi" or "Tamil" directly
         prompt = f"Translate the following text to {target_language}. Provide only the translation, no extra commentary:\n\n{text}"
-        response = self.vision_model.generate_content(prompt)
+        
+        # NEW SDK: Generate content using the client
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt
+        )
         return response.text.strip()
 
     def generate_speech(self, text: str, language: str = "English") -> str:

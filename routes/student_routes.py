@@ -12,11 +12,11 @@ class TranslationRequest(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
-    language_code: str = "en-US"
+    language: str = "English"
 
 class ContentRequest(BaseModel):
     topic: str
-    learning_capacity: str  # e.g., 'beginner', 'intermediate', 'advanced', or 'visual learner'
+    learning_capacity: str  
 
 class QuizRequest(BaseModel):
     topic: str
@@ -24,10 +24,10 @@ class QuizRequest(BaseModel):
     num_questions: int = 5
 
 class QuizEvaluationRequest(BaseModel):
-    submission_data: dict  # The questions, the correct answers, and the student's selected answers
+    submission_data: dict  
 
 class SelfAssessmentRequest(BaseModel):
-    performance_data: dict # Subject scores and historical data
+    performance_data: dict 
 
 class AlertRequest(BaseModel):
     assignment_name: str
@@ -44,23 +44,27 @@ async def translate_script(req: TranslationRequest):
 @router.post("/text-to-voice")
 async def text_to_voice(req: TTSRequest):
     try:
-        return {"status": "success", "audio_base64": student_controller.generate_speech(req.text, req.language_code)}
+        return {"status": "success", "audio_base64": student_controller.generate_speech(req.text, req.language)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/voice-to-text")
-async def voice_to_text(file: UploadFile = File(...), language_code: str = Form("en-US")):
+async def voice_to_text(file: UploadFile = File(...), language: str = Form("English")):
     try:
         audio_bytes = await file.read()
-        return {"status": "success", "transcription": student_controller.process_audio_to_text(audio_bytes, language_code)}
+        return {"status": "success", "transcription": student_controller.process_audio_to_text(audio_bytes, language)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/audio-translator")
-async def audio_translator(file: UploadFile = File(...), source_lang: str = Form("en-US"), target_lang_code: str = Form(...)):
+async def audio_translator(
+    file: UploadFile = File(...), 
+    source_language: str = Form("English"), 
+    target_language: str = Form(...)
+):
     try:
         audio_bytes = await file.read()
-        return {"status": "success", "data": student_controller.audio_language_translator(audio_bytes, source_lang, target_lang_code)}
+        return {"status": "success", "data": student_controller.audio_language_translator(audio_bytes, source_language, target_language)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -9,9 +9,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.student_routes import router as student_router
 from routes.admin_routes import router as admin_router
-from routes.teacher_routes import router as teacher_router
+from routes.Faculty_routes import router as faculty_router 
 from routes.hm_routes import router as hm_router
-from routes.parent_routes import router as parent_router
+from routes.Parent_routes import router as parent_router
 
 app = FastAPI(
     title="Demo School AI Service",
@@ -33,7 +33,7 @@ app.include_router(student_router, prefix="/api/v1/student", tags=["Student Dash
 
 app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin Dashboard"])
 
-app.include_router(teacher_router, prefix="/api/v1/teacher", tags=["Teacher Dashboard"])
+app.include_router(faculty_router, prefix="/api/v1/faculty", tags=["Faculty Dashboard"])
 
 app.include_router(hm_router, prefix="/api/v1/hm", tags=["HM Dashboard"])
 

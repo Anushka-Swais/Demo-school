@@ -1,17 +1,11 @@
 import os
-import google.generativeai as genai
+from google import genai
 from controllers.admin_controller import AdminAIController
 
 class ParentAIController(AdminAIController):
     def __init__(self):
+        # Inherits self.client and self.model_name directly from AdminAIController
         super().__init__()
-        
-        # Dynamically load the model strictly from .env (No hardcoding!)
-        model_name = os.getenv("GEMINI_MODEL")
-        if not model_name:
-            raise ValueError("GEMINI_MODEL is missing from environment variables.")
-            
-        self.model = genai.GenerativeModel(model_name)
 
     def generate_assessment_summary(self, student_name: str, subject: str, test_name: str, marks_obtained: float, total_marks: float, teacher_remarks: str) -> str:
         prompt = f"""
@@ -30,7 +24,11 @@ class ParentAIController(AdminAIController):
         3. Provide 1-2 practical, easy things the parent can do at home to support their child.
         4. Keep the total response under 150 words.
         """
-        response = self.model.generate_content(prompt)
+        # Using the new SDK syntax with the inherited client and model_name
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt
+        )
         return response.text.strip()
 
     def generate_due_date_alert(self, student_name: str, assignment_title: str, subject: str, due_date: str, description: str) -> str:
@@ -47,5 +45,9 @@ class ParentAIController(AdminAIController):
         Briefly mention what the assignment is about and suggest how the parent can check in on their child's progress (e.g., asking to see a draft or helping gather materials).
         Keep it under 3-4 sentences.
         """
-        response = self.model.generate_content(prompt)
+        # Using the new SDK syntax with the inherited client and model_name
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt
+        )
         return response.text.strip()

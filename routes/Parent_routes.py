@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
-from controllers.parent_controller import ParentAIController
+from controllers.Parent_controller import ParentAIController # <-- FIXED CAPITAL P!
 from routes.admin_routes import TranslationRequest, TTSRequest 
 
 router = APIRouter()

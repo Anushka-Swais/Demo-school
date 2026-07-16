@@ -16,9 +16,6 @@ from routes.Faculty_routes import router as faculty_router
 from routes.hm_routes import router as hm_router
 from routes.Parent_routes import router as parent_router
 
-# 3. Create Database Tables automatically on startup
-Base.metadata.create_all(bind=engine)      # <-- NEW: Automatically binds and creates your Postgres tables!
-
 app = FastAPI(
     title="Demo School AI Service",
     description="AI Microservice for Demo School Dashboards",

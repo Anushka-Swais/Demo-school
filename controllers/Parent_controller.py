@@ -1,10 +1,11 @@
-import os
-from google import genai
 from controllers.admin_controller import AdminAIController
+
+# --- NEW: Import your centralized AI config! ---
+from config.ai_config import client, model_name
 
 class ParentAIController(AdminAIController):
     def __init__(self):
-        # Inherits self.client and self.model_name directly from AdminAIController
+        # Inherits the Google Cloud Voice TTS/STT clients from AdminAIController
         super().__init__()
 
     def generate_assessment_summary(self, student_name: str, subject: str, test_name: str, marks_obtained: float, total_marks: float, teacher_remarks: str) -> str:
@@ -24,9 +25,9 @@ class ParentAIController(AdminAIController):
         3. Provide 1-2 practical, easy things the parent can do at home to support their child.
         4. Keep the total response under 150 words.
         """
-        # Using the new SDK syntax with the inherited client and model_name
-        response = self.client.models.generate_content(
-            model=self.model_name,
+        # --- NEW: Using the global client and model_name ---
+        response = client.models.generate_content(
+            model=model_name,
             contents=prompt
         )
         return response.text.strip()
@@ -45,9 +46,9 @@ class ParentAIController(AdminAIController):
         Briefly mention what the assignment is about and suggest how the parent can check in on their child's progress (e.g., asking to see a draft or helping gather materials).
         Keep it under 3-4 sentences.
         """
-        # Using the new SDK syntax with the inherited client and model_name
-        response = self.client.models.generate_content(
-            model=self.model_name,
+        # --- NEW: Using the global client and model_name ---
+        response = client.models.generate_content(
+            model=model_name,
             contents=prompt
         )
         return response.text.strip()

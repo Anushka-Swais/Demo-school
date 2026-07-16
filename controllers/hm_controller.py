@@ -1,24 +1,17 @@
 import os
 import base64
-from google import genai
 from google.cloud import texttospeech
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 
+# --- NEW: Import your centralized AI config! ---
+from config.ai_config import client, model_name
+
 class HMAIController:
     def __init__(self):
-        # 1. Initialize Gemini Client (New SDK Standard)
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY is missing from environment variables.")
-        self.client = genai.Client(api_key=api_key)
+        # We NO LONGER initialize Gemini here. It is handled globally!
+        # We only need to initialize Google Cloud Voice for TTS/STT.
         
-        # 2. Load model name from environment
-        self.model_name = os.getenv("GEMINI_MODEL")
-        if not self.model_name:
-            raise ValueError("GEMINI_MODEL is missing from environment variables.")
-
-        # 3. Initialize GCP Clients
         gcp_key = os.getenv("GOOGLE_TTS_API_KEY")
         if not gcp_key:
              raise ValueError("GOOGLE_TTS_API_KEY is missing from environment variables.")
@@ -27,29 +20,22 @@ class HMAIController:
         self.tts_client = texttospeech.TextToSpeechClient(client_options=client_options)
         self.stt_client = speech.SpeechClient(client_options=client_options)
 
-        # 4. Regional Language Mapper for Google Cloud Voice APIs
         self.language_map = {
-            "english": "en-IN",
-            "hindi": "hi-IN",
-            "telugu": "te-IN",
-            "kannada": "kn-IN",
-            "tamil": "ta-IN",
-            "gujrati": "gu-IN", 
-            "gujarati": "gu-IN",
-            "marathi": "mr-IN",
-            "panjabi": "pa-IN",
-            "punjabi": "pa-IN"
+            "english": "en-IN", "hindi": "hi-IN", "telugu": "te-IN",
+            "kannada": "kn-IN", "tamil": "ta-IN", "gujrati": "gu-IN", 
+            "gujarati": "gu-IN", "marathi": "mr-IN", "panjabi": "pa-IN", "punjabi": "pa-IN"
         }
 
     def _get_lang_code(self, language_name: str) -> str:
-        """Helper to convert friendly names like 'Hindi' into 'hi-IN' for GCP APIs"""
         lang_lower = language_name.lower().strip()
         return self.language_map.get(lang_lower, language_name if "-" in language_name else "en-US")
 
     # --- SHARED COMMUNICATION FEATURES ---
     def translate_text(self, text: str, target_language: str) -> str:
         prompt = f"Translate the following text to {target_language}. Provide only the translation:\n\n{text}"
-        response = self.client.models.generate_content(model=self.model_name, contents=prompt)
+        
+        # --- NEW: Using the global client and model_name ---
+        response = client.models.generate_content(model=model_name, contents=prompt)
         return response.text.strip()
 
     def generate_speech(self, text: str, language: str = "English") -> str:
@@ -83,7 +69,8 @@ class HMAIController:
         Student Data:
         {student_data}
         """
-        response = self.client.models.generate_content(model=self.model_name, contents=prompt)
+        # --- NEW: Using the global client and model_name ---
+        response = client.models.generate_content(model=model_name, contents=prompt)
         return response.text.strip()
 
     def assess_classroom(self, classroom_data: dict) -> str:
@@ -95,5 +82,6 @@ class HMAIController:
         Classroom Data:
         {classroom_data}
         """
-        response = self.client.models.generate_content(model=self.model_name, contents=prompt)
+        # --- NEW: Using the global client and model_name ---
+        response = client.models.generate_content(model=model_name, contents=prompt)
         return response.text.strip()

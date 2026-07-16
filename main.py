@@ -4,14 +4,20 @@ from dotenv import load_dotenv
 # 1. THIS MUST BE AT THE VERY TOP! Load the .env file first.
 load_dotenv()
 
-# 2. NOW import FastAPI and your routes, so they can use the keys.
+# 2. NOW import FastAPI, your routes, and your Database Config.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from config.db_config import engine, Base  # <-- NEW: Import your DB engine and Base class
+
+# Import Routes
 from routes.student_routes import router as student_router
 from routes.admin_routes import router as admin_router
 from routes.Faculty_routes import router as faculty_router 
 from routes.hm_routes import router as hm_router
 from routes.Parent_routes import router as parent_router
+
+# 3. Create Database Tables automatically on startup
+Base.metadata.create_all(bind=engine)      # <-- NEW: Automatically binds and creates your Postgres tables!
 
 app = FastAPI(
     title="Demo School AI Service",
@@ -28,15 +34,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register Admin Routes
+# Register Routes
 app.include_router(student_router, prefix="/api/v1/student", tags=["Student Dashboard"])
-
 app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin Dashboard"])
-
 app.include_router(faculty_router, prefix="/api/v1/faculty", tags=["Faculty Dashboard"])
-
 app.include_router(hm_router, prefix="/api/v1/hm", tags=["HM Dashboard"])
-
 app.include_router(parent_router, prefix="/api/v1/parent", tags=["Parent Dashboard"])
 
 if __name__ == "__main__":

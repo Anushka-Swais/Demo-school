@@ -4,14 +4,11 @@ from google.cloud import texttospeech
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 
-# --- NEW: Import your centralized AI config! ---
+# Import your centralized AI config
 from config.ai_config import client, model_name
 
 class FacultyAIController:
     def __init__(self):
-        # We NO LONGER initialize Gemini here. It is handled globally!
-        # We only need to initialize Google Cloud Voice for TTS/STT.
-        
         gcp_key = os.getenv("GOOGLE_TTS_API_KEY")
         if not gcp_key:
              raise ValueError("GOOGLE_TTS_API_KEY is missing from environment variables.")
@@ -33,8 +30,6 @@ class FacultyAIController:
     # --- SHARED COMMUNICATION FEATURES ---
     def translate_text(self, text: str, target_language: str) -> str:
         prompt = f"Translate the following text to {target_language}. Provide only the translation:\n\n{text}"
-        
-        # --- NEW: Using the global client and model_name ---
         response = client.models.generate_content(model=model_name, contents=prompt)
         return response.text.strip()
 
@@ -70,18 +65,43 @@ class FacultyAIController:
         3. Classroom Activity/Interactive Element
         4. Assessment Method
         """
-        # --- NEW: Using the global client and model_name ---
         response = client.models.generate_content(model=model_name, contents=prompt)
         return response.text.strip()
 
     def generate_quiz_for_class(self, topic: str, difficulty: str, format_type: str, num_questions: int) -> str:
+        # NEW: Forcing a strict JSON schema guarantees all question types are generated
         prompt = f"""
-        Generate a {difficulty} level test/quiz with {num_questions} questions on the topic '{topic}'.
-        The format should be {format_type} (e.g., multiple-choice, short answer, fill-in-the-blank).
-        Provide the questions clearly, and append a detailed answer key at the bottom for the teacher.
+        Act as an expert curriculum designer and teacher. 
+        Generate a {difficulty} level comprehensive exam paper on the topic '{topic}'.
+        
+        CRITICAL INSTRUCTION: You MUST divide the {num_questions} total questions across four specific formats. 
+        You MUST return the output STRICTLY as a valid JSON object matching the exact schema below. Do not include markdown formatting like ```json.
+        
+        {{
+            "exam_title": "{topic} - {difficulty} Exam",
+            "total_questions_requested": {num_questions},
+            "sections": {{
+                "mcq": [
+                    {{ "type": "Quiz/MCQ", "question": "...", "options": ["...", "...", "...", "..."], "correct_answer": "..." }}
+                ],
+                "true_false": [
+                    {{ "type": "True/False", "question": "...", "correct_answer": "True or False" }}
+                ],
+                "short_answer": [
+                    {{ "type": "Short Question", "question": "...", "answer_key": "Brief expected answer..." }}
+                ],
+                "long_answer": [
+                    {{ "type": "Long Question", "question": "...", "grading_rubric": "Key points to look for..." }}
+                ]
+            }}
+        }}
+        
+        Ensure you populate every array with at least one question, and the total number of questions across all arrays must equal {num_questions}.
         """
         response = client.models.generate_content(model=model_name, contents=prompt)
-        return response.text.strip()
+        # We strip out any stray markdown formatting the AI might try to wrap the JSON in
+        clean_response = response.text.replace("```json", "").replace("```", "").strip()
+        return clean_response
 
     def generate_assignment(self, topic: str, grade_level: str, instructions: str) -> str:
         prompt = f"""
